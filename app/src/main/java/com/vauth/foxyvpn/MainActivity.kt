@@ -1,6 +1,7 @@
 package com.vauth.foxyvpn
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.VpnService
 import android.os.Build
@@ -71,6 +72,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val app = application as FoxyVpnApp
+        handleAutoConnect(intent)
         setContent {
 
             val themeController = rememberThemeController(app.settingsStore)
@@ -87,5 +89,25 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleAutoConnect(intent)
+    }
+
+    /**
+     * Consumes the Quick Settings tile's [EXTRA_AUTO_CONNECT] so a launch that only needs the
+     * VPN consent dialog (or a background-start fallback) connects as soon as it resolves.
+     */
+    private fun handleAutoConnect(intent: Intent?) {
+        if (intent?.getBooleanExtra(EXTRA_AUTO_CONNECT, false) != true) return
+        intent.removeExtra(EXTRA_AUTO_CONNECT)
+        requestConnect()
+    }
+
+    companion object {
+        const val EXTRA_AUTO_CONNECT = "com.vauth.foxyvpn.action.AUTO_CONNECT"
     }
 }
